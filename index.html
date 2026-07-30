@@ -3,460 +3,621 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>酸素解離曲線 - 生徒用インタラクティブアプリ</title>
+<title>酸素解離曲線 - 生徒用シミュレーター</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Old+Mincho:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Old+Mincho:wght@600;900&display=swap" rel="stylesheet">
+
 <style>
-  :root {
-    --ink: #16211b;
-    --ink-soft: #5b655e;
-    --paper: #f1f4f1;
-    --line: #d8ded8;
-    --green: #17805e;
-    --green-deep: #0b4a35;
-    --green-tint: #dff0e7;
-    --rust: #b65b34;
-    --rust-deep: #7c3d20;
-    --rust-tint: #f6e4d9;
-    --color-co2-40: #10b981;
-    --color-co2-60: #f97316;
-    --truck-empty: #e2e8f0;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
-  }
-  
-  .app-container {
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 40px 20px;
-  }
-  
-  .header-area {
-    text-align: center;
-    margin-bottom: 24px;
-  }
-  .header-area h1 {
-    font-size: 22px;
-    margin: 0 0 8px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-  .header-area p {
-    font-size: 14px;
-    color: #6b7280;
-    margin: 0;
+  body {
+    font-family: 'Plus Jakarta Sans', 'Zen Kaku Gothic New', -apple-system, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
   }
 
-  .pc-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-    align-items: start;
-  }
-  @media (min-width: 768px) {
-    .pc-grid {
-      grid-template-columns: 1fr 1fr;
-    }
+  /* ガラスモーフィズム風カード */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
   }
 
-  .acard {
-    background: #fff;
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  }
-
-  button.abtn {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    color: #1f2937;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    padding: 6px 16px;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  button.abtn:hover:not(:disabled) {
-    background: #f3f4f6;
-    border-color: #d1d5db;
-  }
-  button.abtn:active:not(:disabled) {
-    transform: scale(0.96);
-  }
-  button.abtn:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-
+  /* トラックバウンスアニメーション */
   @keyframes truckBounce {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+    50% { transform: translateY(-2.5px); }
   }
-  .moving {
-    animation: truckBounce 0.25s ease-in-out infinite;
+  .truck-moving {
+    animation: truckBounce 0.22s ease-in-out infinite;
   }
 
+  /* 酸素（O₂）バブル積み下ろしアニメーション */
   @keyframes loadBubble {
-    0% { opacity: 0; transform: translate(-10px, -24px) scale(0.4); }
-    50% { opacity: 0.9; }
-    100% { opacity: 0; transform: translate(12px, 2px) scale(0.9); }
+    0% { opacity: 0; transform: translate(-8px, -18px) scale(0.4); }
+    50% { opacity: 1; }
+    100% { opacity: 0; transform: translate(0px, 0px) scale(1); }
   }
+
   @keyframes unloadBubble {
-    0% { opacity: 0.9; transform: translate(12px, 2px) scale(0.9); }
+    0% { opacity: 1; transform: translate(0px, 0px) scale(1); }
     50% { opacity: 0.8; }
-    100% { opacity: 0; transform: translate(28px, 22px) scale(0.4); }
+    100% { opacity: 0; transform: translate(12px, 20px) scale(0.3); }
   }
 
   .particle-bubble {
     position: absolute;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 8px;
-    font-weight: bold;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    z-index: 10;
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
+
   .particle-load {
-    background: var(--color-co2-40);
-    animation: loadBubble 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+    background: #10b981;
+    animation: loadBubble 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
   }
+
   .particle-unload {
-    background: var(--color-co2-60);
-    animation: unloadBubble 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+    background: #f97316;
+    animation: unloadBubble 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  /* 血管内を流れる血流パルス */
+  .blood-flow-path {
+    stroke-dasharray: 6, 8;
+    animation: flowDashForward 0.7s linear infinite;
+  }
+  .blood-flow-stopped {
+    animation-play-state: paused !important;
+    opacity: 0.25;
+  }
+
+  @keyframes flowDashForward {
+    from { stroke-dashoffset: 28; }
+    to { stroke-dashoffset: 0; }
   }
 </style>
 </head>
-<body>
+<body class="min-h-screen py-6 px-4 md:px-8">
 
-<div class="app-container">
-  <div class="header-area">
-    <h1>酸素解離曲線 ヘモグロビンを「酸素トラック」にみたてて</h1>
-    <p>グラフをタップして読み取ろう！</p>
-  </div>
-  
-  <div class="pc-grid">
-    <!-- グラフ・タップ読み取りエリア -->
-    <div class="acard">
-      <div style="display:flex; gap:16px; margin-bottom:12px; justify-content:center; font-size:12px; font-weight:600;">
-        <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; border-radius:50%; background:var(--color-co2-40);"></span>CO₂濃度 40</span>
-        <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; border-radius:50%; background:var(--color-co2-60);"></span>CO₂濃度 60</span>
-      </div>
-      <svg id="graph" viewBox="0 0 320 210" style="width:100%; height:auto; display:block; margin:0 auto; max-width:440px; cursor:crosshair; background:#fafafa; border-radius:12px; padding:8px; border:1px solid #f0f0f0;" role="img">
-        <title>二酸化炭素濃度の異なる2本の酸素解離曲線</title>
-        <line x1="40" y1="180" x2="300" y2="180" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="40" y1="20" x2="40" y2="180" stroke="#cbd5e1" stroke-width="1.5"/>
-        <text x="170" y="203" text-anchor="middle" style="font-size:11px; fill:#6b7280; font-weight:500;">酸素濃度（相対値）</text>
-        <text x="14" y="100" text-anchor="middle" style="font-size:11px; fill:#6b7280; font-weight:500;" transform="rotate(-90 14 100)">酸素ヘモグロビンの割合（%）</text>
-        <text x="34" y="184" text-anchor="end" style="font-size:10px; fill:#6b7280;">0</text>
-        <text x="34" y="24" text-anchor="end" style="font-size:10px; fill:#6b7280;">100</text>
-        <text x="40" y="192" text-anchor="middle" style="font-size:10px; fill:#6b7280;">0</text>
-        <text x="300" y="192" text-anchor="middle" style="font-size:10px; fill:#6b7280;">100</text>
-        <line x1="40" y1="24.8" x2="300" y2="24.8" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3"/>
-        <path d="M40,180 L66,141.0 L92,89.8 L118,61.0 L144,45.9 L170,37.6 L196,32.6 L222,29.4 L248,27.4 L274,25.9 L300,24.8" fill="none" stroke="var(--color-co2-40)" stroke-width="3" stroke-linecap="round"/>
-        <path d="M40,180 L66,169.0 L92,143.4 L118,116.0 L144,93.3 L170,76.2 L196,63.7 L222,54.6 L248,47.8 L274,42.9 L300,39.0" fill="none" stroke="var(--color-co2-60)" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="300" cy="24.8" r="5" fill="var(--color-co2-40)" stroke="#ffffff" stroke-width="2"/>
-        <text id="label-A" x="292" y="16" text-anchor="end" style="font-size:12px; font-weight:700; fill:#1f2937;">点A</text>
-        <circle cx="118" cy="116" r="5" fill="var(--color-co2-60)" stroke="#ffffff" stroke-width="2"/>
-        <text id="label-B" x="126" y="130" text-anchor="start" style="font-size:12px; font-weight:700; fill:#1f2937;">点B</text>
-        <rect x="40" y="20" width="260" height="160" fill="transparent"/>
-        <line id="pick-x" x1="0" y1="0" x2="0" y2="180" stroke="#475569" stroke-width="1" stroke-dasharray="2,2" opacity="0"/>
-        <line id="pick-y" x1="40" y1="0" x2="0" y2="0" stroke="#475569" stroke-width="1" stroke-dasharray="2,2" opacity="0"/>
-        <circle id="pick-marker" cx="0" cy="0" r="5.5" fill="#1f2937" stroke="#ffffff" stroke-width="1.5" opacity="0"/>
-      </svg>
-      <div id="pick-readout" style="font-size:13px; color:#1f2937; margin-top:12px; min-height:22px; text-align:center; font-weight:600;">グラフをタップすると割合が読み取れるよ</div>
-      <div id="click-trucks" style="display:flex; gap:2px; justify-content:center; margin-top:12px; flex-wrap:nowrap; width:100%; max-width:320px; margin-left:auto; margin-right:auto;"></div>
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <!-- ヘッダー -->
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+    <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+      酸素解離曲線 <span class="text-emerald-600">生徒用シミュレーター</span>
+    </h1>
+    <div class="text-right">
+      <span class="text-xs md:text-sm font-bold text-emerald-600 block">Chromebookアプリモード</span>
+      <span class="text-[10px] md:text-xs text-slate-400 font-medium">手元でグラフやトラックを操作してみよう</span>
     </div>
+  </div>
 
-    <!-- 右側：クイズ＆アニメーション -->
-    <div class="right-col" style="display:flex; flex-direction:column; gap:20px;">
-      <!-- クイズカード -->
-      <div class="acard">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 style="font-size:14px; font-weight:700; margin:0;">点Aと点B、どっちが肺胞でどっちが組織でしょうか？</h3>
-          <button class="abtn" id="quiz-reset-btn" style="font-size:11px; padding:4px 10px; border-radius:6px; flex-shrink:0; margin-left:8px;">リセット</button>
+  <!-- メイン2カラムレイアウト -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- 左カラム：循環回路 ＆ 酸素トラックシミュレーター -->
+    <div class="lg:col-span-7 space-y-5">
+      
+      <!-- 1. 人体血液循環サーキット -->
+      <div class="glass-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-sm font-black text-slate-800 flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-4.318-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+              ヒトの血液循環サーキット（体循環と肺循環）
+            </h2>
+            <p class="text-xs text-slate-400">心臓のポンプ作用によって赤血球（ヘモグロビン）が全身を循環します</p>
+          </div>
+          <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">閉鎖血管系</span>
         </div>
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:var(--color-co2-40); flex-shrink:0;"></span>
-          <span style="font-size:14px; min-width:36px; font-weight:700;">点A</span>
-          <button class="abtn quiz-btn" data-point="A" data-choice="肺胞">肺胞</button>
-          <button class="abtn quiz-btn" data-point="A" data-choice="組織">組織</button>
-        </div>
-        <div id="feedback-A" style="font-size:12px; min-height:18px; margin:2px 0 12px 56px; line-height:1.4;"></div>
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:var(--color-co2-60); flex-shrink:0;"></span>
-          <span style="font-size:14px; min-width:36px; font-weight:700;">点B</span>
-          <button class="abtn quiz-btn" data-point="B" data-choice="肺胞">肺胞</button>
-          <button class="abtn quiz-btn" data-point="B" data-choice="組織">組織</button>
-        </div>
-        <div id="feedback-B" style="font-size:12px; min-height:18px; margin:2px 0 0 56px; line-height:1.4;"></div>
+
+        <!-- 血液循環 SVG -->
+        <svg viewBox="0 0 440 220" class="w-full h-auto rounded-xl bg-slate-900/95 border border-slate-800 p-2 shadow-inner" role="img">
+          <defs>
+            <linearGradient id="grad-lung" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#059669" />
+              <stop offset="100%" stop-color="#10b981" />
+            </linearGradient>
+            <linearGradient id="grad-tissue" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ea580c" />
+              <stop offset="100%" stop-color="#f97316" />
+            </linearGradient>
+          </defs>
+
+          <rect x="10" y="10" width="420" height="200" rx="12" fill="#0f172a" />
+
+          <!-- 1. 肺動脈 -->
+          <path d="M 195 102 L 100 102 C 60 102, 40 85, 40 48 C 40 28, 60 28, 110 28" fill="none" stroke="#1e3a8a" stroke-width="4"/>
+          <path id="flow-p-art" class="blood-flow-path blood-flow-stopped" d="M 195 102 L 100 102 C 60 102, 40 85, 40 48 C 40 28, 60 28, 110 28" fill="none" stroke="#60a5fa" stroke-width="4"/>
+
+          <!-- 2. 肺静脈 -->
+          <path d="M 330 28 C 380 28, 400 28, 400 48 C 400 85, 380 102, 245 102" fill="none" stroke="#881337" stroke-width="4"/>
+          <path id="flow-p-vein" class="blood-flow-path blood-flow-stopped" d="M 330 28 C 380 28, 400 28, 400 48 C 400 85, 380 102, 245 102" fill="none" stroke="#f43f5e" stroke-width="4"/>
+
+          <!-- 3. 大動脈 -->
+          <path d="M 245 125 L 380 125 C 400 125, 400 145, 400 180 C 400 195, 380 195, 330 195" fill="none" stroke="#881337" stroke-width="4"/>
+          <path id="flow-aorta" class="blood-flow-path blood-flow-stopped" d="M 245 125 L 380 125 C 400 125, 400 145, 400 180 C 400 195, 380 195, 330 195" fill="none" stroke="#f43f5e" stroke-width="4"/>
+
+          <!-- 4. 大静脈 -->
+          <path d="M 110 195 C 60 195, 40 195, 40 180 C 40 145, 60 125, 195 125" fill="none" stroke="#1e3a8a" stroke-width="4"/>
+          <path id="flow-vena" class="blood-flow-path blood-flow-stopped" d="M 110 195 C 60 195, 40 195, 40 180 C 40 145, 60 125, 195 125" fill="none" stroke="#60a5fa" stroke-width="4"/>
+
+          <!-- 器官ノード -->
+          <g transform="translate(110, 12)">
+            <rect x="0" y="0" width="220" height="34" rx="17" fill="url(#grad-lung)" stroke="#34d399" stroke-width="1.5" />
+            <text x="110" y="21" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">🫁 肺胞 (ガス交換の現場)</text>
+          </g>
+
+          <g transform="translate(180, 85)">
+            <rect x="0" y="0" width="80" height="48" rx="10" fill="#1e1b4b" stroke="#f43f5e" stroke-width="2"/>
+            <text x="40" y="14" text-anchor="middle" fill="#fda4af" font-size="9" font-weight="800">🫀 心臓</text>
+            
+            <!-- 左右を隔てる中隔（実線で完全に仕切る） -->
+            <line x1="40" y1="18" x2="40" y2="48" stroke="#e11d48" stroke-width="1.5"/>
+            
+            <!-- 右心房から右心室への繋がり（隙間と矢印） -->
+            <line x1="4" y1="31" x2="14" y2="31" stroke="#e11d48" stroke-width="1.5"/>
+            <line x1="26" y1="31" x2="40" y2="31" stroke="#e11d48" stroke-width="1.5"/>
+            <path d="M 17 29 L 20 33 L 23 29" fill="none" stroke="#93c5fd" stroke-width="1.2"/>
+            
+            <!-- 左心房から左心室への繋がり（隙間と矢印） -->
+            <line x1="40" y1="31" x2="54" y2="31" stroke="#e11d48" stroke-width="1.5"/>
+            <line x1="66" y1="31" x2="76" y2="31" stroke="#e11d48" stroke-width="1.5"/>
+            <path d="M 57 29 L 60 33 L 63 29" fill="none" stroke="#fca5a5" stroke-width="1.2"/>
+
+            <text x="20" y="25" text-anchor="middle" fill="#93c5fd" font-size="7" font-weight="700">右心房</text>
+            <text x="20" y="43" text-anchor="middle" fill="#93c5fd" font-size="7" font-weight="700">右心室</text>
+            <text x="60" y="25" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="700">左心房</text>
+            <text x="60" y="43" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="700">左心室</text>
+          </g>
+
+          <g transform="translate(110, 178)">
+            <rect x="0" y="0" width="220" height="34" rx="17" fill="url(#grad-tissue)" stroke="#fb923c" stroke-width="1.5"/>
+            <text x="110" y="21" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">🦵 全身の組織・細胞 (酸素供給の現場)</text>
+          </g>
+
+          <text x="75" y="94" fill="#93c5fd" font-size="9" font-weight="700">肺動脈</text>
+          <text x="365" y="94" text-anchor="end" fill="#fca5a5" font-size="9" font-weight="700">肺静脈</text>
+          <text x="365" y="140" text-anchor="end" fill="#fca5a5" font-size="9" font-weight="700">大動脈</text>
+          <text x="75" y="140" fill="#93c5fd" font-size="9" font-weight="700">大静脈</text>
+        </svg>
       </div>
 
-      <!-- トラックアニメーションカード -->
-      <div class="acard">
-        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#6b7280; margin-bottom:8px;">
-          <span>肺胞</span><span>組織</span>
+      <!-- 2. 酸素トラック＆インターフェース -->
+      <div class="glass-card rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between text-xs font-bold border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/50">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            【肺胞】 CO₂: 40 / O₂: 100
+          </div>
+          <div class="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200/50">
+            【組織】 CO₂: 60 / O₂: 30
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+          </div>
         </div>
-        <div style="position:relative; height:60px; border-bottom:2px dashed #cbd5e1; margin-bottom:16px;">
-          <div id="particle-container" style="position:absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
-          <div id="truck" style="position:absolute; left:0; bottom:2px; transition: left 1.6s ease-in-out;">
-            <svg id="truck-icon-svg" width="52" height="52" viewBox="0 0 28 28">
+
+        <div class="text-center py-1">
+          <div id="bubbles" class="inline-flex gap-1.5 justify-center bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-inner"></div>
+        </div>
+
+        <div class="relative h-14 border-b-2 border-dashed border-slate-300 mb-2">
+          <div id="particle-container" class="absolute inset-0 pointer-events-none"></div>
+
+          <div id="truck" class="absolute left-0 bottom-1 transition-all duration-[1600ms] ease-in-out">
+            <svg id="truck-icon-svg" class="w-12 h-12" viewBox="0 0 28 28">
               <g id="cargo-o2-group">
-                <circle cx="6" cy="11" r="2.2" fill="#ffffff" opacity="0.9" />
-                <circle cx="10" cy="11" r="2.2" fill="#ffffff" opacity="0.9" />
-                <circle cx="8" cy="8" r="2.2" fill="#ffffff" opacity="0.9" />
-                <circle cx="4" cy="8" r="1.8" fill="#ffffff" opacity="0.8" />
-                <circle cx="11" cy="8" r="1.8" fill="#ffffff" opacity="0.8" />
-                <text id="cargo-o2-text" x="7.5" y="10" font-size="3.5" font-weight="900" text-anchor="middle" fill="#1f2937" opacity="0.95">O₂</text>
+                <circle class="cargo-b" cx="6" cy="11" r="2.2" fill="#ffffff" opacity="0.9" />
+                <circle class="cargo-b" cx="10" cy="11" r="2.2" fill="#ffffff" opacity="0.9" />
+                <circle class="cargo-b" cx="8" cy="8" r="2.2" fill="#ffffff" opacity="0.9" />
+                <circle class="cargo-b" cx="4" cy="8" r="1.8" fill="#ffffff" opacity="0.8" />
+                <circle class="cargo-b" cx="11" cy="8" r="1.8" fill="#ffffff" opacity="0.8" />
+                <text id="cargo-o2-text" x="7.5" y="10" font-size="3.5" font-weight="900" text-anchor="middle" fill="#0f172a" opacity="0.95">O₂</text>
               </g>
-              <path id="truck-body" fill="var(--color-co2-40)" d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5 M7 17a2 2 0 1 0 0 0.01 M17 17a2 2 0 1 0 0 0.01"/>
-              <path stroke="#64748b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M7 17a2 2 0 1 0 0 0.01 M17 17a2 2 0 1 0 0 0.01 M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5"/>
+              <path id="truck-body" fill="#10b981" d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5 M7 17a2 2 0 1 0 0 0.01 M17 17a2 2 0 1 0 0 0.01"/>
+              <path stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M7 17a2 2 0 1 0 0 0.01 M17 17a2 2 0 1 0 0 0.01 M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5"/>
             </svg>
           </div>
         </div>
-        <div id="bubbles" style="display:flex; gap:6px; justify-content:center; margin-bottom:12px;"></div>
-        <div style="text-align:center; font-size:15px; margin-bottom:6px; font-weight:700;">Hb + O<sub>2</sub> ⇌ HbO<sub>2</sub></div>
-        <div id="status-el" style="text-align:center; font-size:12px; color:#6b7280; margin-bottom:16px; min-height:18px;">肺胞で酸素をたっぷり積み込み中（Hb + O₂ → HbO₂）</div>
-        <div style="text-align:center;">
-          <button class="abtn" id="go-btn" style="border-radius:999px; padding:8px 24px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,.05);">
+
+        <div class="text-center space-y-1">
+          <div class="text-base md:text-lg font-black text-slate-800 tracking-wider">
+            Hb + O<sub>2</sub> <span class="text-emerald-600 font-normal">⇌</span> HbO<sub>2</sub>
+          </div>
+          <div id="status-el" class="text-xs font-bold text-slate-500 h-5">
+            肺胞で酸素の積み込み完了！（割合: 97%）
+          </div>
+        </div>
+
+        <div class="text-center pt-1">
+          <button id="go-btn" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-900 text-white font-bold text-xs md:text-sm hover:bg-slate-800 active:scale-95 transition-all shadow-md disabled:opacity-50">
             <span>組織へ出発</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
       </div>
+
     </div>
+
+    <!-- 右カラム：グラフ ＆ クイズ -->
+    <div class="lg:col-span-5 space-y-5">
+      
+      <!-- グラフカード -->
+      <div class="glass-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <h2 class="text-sm font-black text-slate-800 flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+            酸素解離曲線グラフ
+          </h2>
+          <span class="text-[10px] font-bold text-slate-400">タップで数値を読み取り</span>
+        </div>
+
+        <div class="flex justify-center gap-6 text-xs font-bold">
+          <span class="inline-flex items-center gap-1.5 text-emerald-600">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            CO₂ 濃度 40
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-orange-600">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+            CO₂ 濃度 60
+          </span>
+        </div>
+
+        <svg id="graph" viewBox="0 0 320 210" class="w-full h-auto bg-slate-50 rounded-xl border border-slate-200/80 p-2 cursor-crosshair">
+          <line x1="40" y1="180" x2="300" y2="180" stroke="#cbd5e1" stroke-width="1.5"/>
+          <line x1="40" y1="20" x2="40" y2="180" stroke="#cbd5e1" stroke-width="1.5"/>
+          <text x="170" y="203" text-anchor="middle" class="text-[10px] fill-slate-500 font-bold">酸素濃度（相対値）</text>
+          <text x="12" y="100" text-anchor="middle" class="text-[9px] fill-slate-500 font-bold" transform="rotate(-90 12 100)">酸素ヘモグロビンの割合（%）</text>
+          <text x="34" y="184" text-anchor="end" class="text-[9px] fill-slate-400">0</text>
+          <text x="34" y="24" text-anchor="end" class="text-[9px] fill-slate-400">100</text>
+          <text x="40" y="192" text-anchor="middle" class="text-[9px] fill-slate-400">0</text>
+          <text x="300" y="192" text-anchor="middle" class="text-[9px] fill-slate-400">100</text>
+          <line x1="40" y1="24.8" x2="300" y2="24.8" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <path d="M40,180 L66,141.0 L92,89.8 L118,61.0 L144,45.9 L170,37.6 L196,32.6 L222,29.4 L248,27.4 L274,25.9 L300,24.8" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+          <path d="M40,180 L66,169.0 L92,143.4 L118,116.0 L144,93.3 L170,76.2 L196,63.7 L222,54.6 L248,47.8 L274,42.9 L300,39.0" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+
+          <circle cx="300" cy="24.8" r="5" fill="#10b981" stroke="#ffffff" stroke-width="2"/>
+          <text id="label-A" x="292" y="16" text-anchor="end" class="text-[11px] font-black fill-slate-800">点A</text>
+
+          <circle cx="118" cy="116" r="5" fill="#f97316" stroke="#ffffff" stroke-width="2"/>
+          <text id="label-B" x="126" y="130" text-anchor="start" class="text-[11px] font-black fill-slate-800">点B</text>
+
+          <rect x="40" y="20" width="260" height="160" fill="transparent"/>
+          <line id="pick-x" x1="0" y1="0" x2="0" y2="180" stroke="#475569" stroke-width="1" stroke-dasharray="2,2" opacity="0"/>
+          <line id="pick-y" x1="40" y1="0" x2="0" y2="0" stroke="#475569" stroke-width="1" stroke-dasharray="2,2" opacity="0"/>
+          <circle id="pick-marker" cx="0" cy="0" r="5.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.5" opacity="0"/>
+        </svg>
+
+        <div id="pick-readout" class="text-xs font-bold text-center text-slate-600 h-6">
+          グラフをタップして読み取ろう！
+        </div>
+
+        <div id="click-trucks" class="flex gap-1 justify-center max-w-[320px] mx-auto"></div>
+      </div>
+
+      <!-- クイズカード -->
+      <div class="glass-card rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <h2 class="text-xs md:text-sm font-black text-slate-800">
+            点Aと点B、どっちが肺胞でどっちが組織でしょうか？
+          </h2>
+          <button id="quiz-reset-btn" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 transition-all">
+            リセット
+          </button>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-black text-slate-700 w-10">点A</span>
+            <div class="flex gap-2">
+              <button class="quiz-btn px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold hover:bg-slate-50 active:scale-95 transition-all" data-point="A" data-choice="肺胞">肺胞</button>
+              <button class="quiz-btn px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold hover:bg-slate-50 active:scale-95 transition-all" data-point="A" data-choice="組織">組織</button>
+            </div>
+          </div>
+          <div id="feedback-A" class="text-xs min-h-[20px] pl-5 leading-relaxed"></div>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+            <span class="text-xs font-black text-slate-700 w-10">点B</span>
+            <div class="flex gap-2">
+              <button class="quiz-btn px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold hover:bg-slate-50 active:scale-95 transition-all" data-point="B" data-choice="肺胞">肺胞</button>
+              <button class="quiz-btn px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold hover:bg-slate-50 active:scale-95 transition-all" data-point="B" data-choice="組織">組織</button>
+            </div>
+          </div>
+          <div id="feedback-B" class="text-xs min-h-[20px] pl-5 leading-relaxed"></div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </div>
 
 <script>
-(function() {
-  const xs = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-  const Ay = [0, 24.4, 56.4, 74.4, 83.8, 89.0, 92.1, 94.1, 95.4, 96.3, 97];
-  const By = [0, 6.9, 22.85, 40, 54.2, 64.9, 72.7, 78.4, 82.6, 85.7, 88.1];
+// --- グラフ演算関数とデータ ---
+var Ay = [0, 24.4, 56.4, 74.4, 83.8, 89.0, 92.1, 94.1, 95.4, 96.3, 97.0];
+var By = [0, 6.9, 22.9, 40.0, 54.2, 64.9, 72.7, 78.4, 82.6, 85.7, 88.1];
 
-  function interp(ys, x) {
-    for (let i = 0; i < xs.length - 1; i++) {
-      if (x >= xs[i] && x <= xs[i+1]) {
-        const t = (x - xs[i]) / (xs[i+1] - xs[i]);
-        return ys[i] + t * (ys[i+1] - ys[i]);
-      }
+function interp(arr, x) {
+  var clampedX = Math.max(0, Math.min(100, x));
+  var idx = clampedX / 10;
+  var i0 = Math.floor(idx);
+  var i1 = Math.min(arr.length - 1, Math.ceil(idx));
+  if (i0 === i1) return arr[i0];
+  var t = idx - i0;
+  return arr[i0] + (arr[i1] - arr[i0]) * t;
+}
+
+function xPos(x) {
+  return 40 + (x / 100) * 260;
+}
+
+function yPos(s) {
+  return 180 - (s / 100) * 160;
+}
+
+// --- グラフクリック・インタラクション ---
+function setClickTrucksPrecision(pct, color) {
+  var container = document.getElementById('click-trucks');
+  if (!container) return;
+  container.innerHTML = '';
+  for (var i = 0; i < 10; i++) {
+    var fill = Math.max(0, Math.min(100, (pct - i * 10) * 10));
+    var box = document.createElement('div');
+    box.className = 'w-5 h-5 rounded border border-slate-300 text-[8px] font-bold flex items-center justify-center';
+    if (fill > 0) {
+      box.style.background = 'linear-gradient(to right, ' + color + ' ' + fill + '%, transparent ' + fill + '%)';
+      box.style.borderColor = color;
+      box.style.color = fill >= 50 ? '#ffffff' : color;
+      box.textContent = 'O₂';
+    } else {
+      box.style.background = 'transparent';
+      box.style.borderColor = '#cbd5e1';
+      box.style.color = 'transparent';
     }
-    return ys[ys.length - 1];
+    container.appendChild(box);
   }
-  function xPos(v) { return 40 + (v / 100) * 260; }
-  function yPos(S) { return 180 - (S / 100) * 160; }
+}
 
-  const clickTruckContainer = document.getElementById('click-trucks');
-  const truckGradStops = [];
-  for (let ct = 0; ct < 10; ct++) {
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'inline-flex';
-    wrapper.style.flexShrink = '0';
-    const svgCode =
-      '<svg width="30" height="30" viewBox="0 0 24 24">' +
-        '<defs>' +
-          '<linearGradient id="truck-grad-' + ct + '" x1="0%" y1="0%" x2="100%" y2="0%">' +
-            '<stop id="grad-stop1-' + ct + '" offset="0%" stop-color="var(--truck-empty)" />' +
-            '<stop id="grad-stop2-' + ct + '" offset="0%" stop-color="var(--truck-empty)" />' +
-          '</linearGradient>' +
-        '</defs>' +
-        '<path fill="url(#truck-grad-' + ct + ')" d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5 M7 17a2 2 0 1 0 0 0.01 M17 17a2 2 0 1 0 0 0.01"/>' +
-        '<path stroke="#64748b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M7 17a2 2 0 1 0 0 0.01 M17 17a2 2 0 1 0 0 0.01 M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5"/>' +
-      '</svg>';
-    wrapper.innerHTML = svgCode;
-    clickTruckContainer.appendChild(wrapper);
-    truckGradStops.push({ stop1: document.getElementById('grad-stop1-' + ct), stop2: document.getElementById('grad-stop2-' + ct) });
-  }
-  function setClickTrucksPrecision(percentage, color) {
-    for (let j = 0; j < 10; j++) {
-      const truckMin = j * 10, truckMax = (j + 1) * 10;
-      let fillRatio = 0;
-      if (percentage >= truckMax) fillRatio = 100;
-      else if (percentage <= truckMin) fillRatio = 0;
-      else fillRatio = ((percentage - truckMin) / 10) * 100;
-      truckGradStops[j].stop1.setAttribute('offset', fillRatio + '%');
-      truckGradStops[j].stop1.setAttribute('stop-color', color);
-      truckGradStops[j].stop2.setAttribute('offset', fillRatio + '%');
-      truckGradStops[j].stop2.setAttribute('stop-color', 'var(--truck-empty)');
-    }
-  }
-  setClickTrucksPrecision(0, 'var(--color-co2-40)');
-
-  const svgApp = document.getElementById('graph');
-  svgApp.addEventListener('click', function(evt) {
-    const pt = svgApp.createSVGPoint();
+var studentGraph = document.getElementById('graph');
+if (studentGraph) {
+  studentGraph.addEventListener('click', function(evt) {
+    var pt = studentGraph.createSVGPoint();
     pt.x = evt.clientX; pt.y = evt.clientY;
-    const loc = pt.matrixTransform(svgApp.getScreenCTM().inverse());
-    const xClamp = Math.max(40, Math.min(300, loc.x));
-    const yClamp = Math.max(20, Math.min(180, loc.y));
-    const xVal = (xClamp - 40) / 260 * 100;
-    const clickS = (180 - yClamp) / 160 * 100;
-    const Sa = interp(Ay, xVal);
-    const Sb = interp(By, xVal);
-    let chosen, color, label;
-    if (Math.abs(clickS - Sa) <= Math.abs(clickS - Sb)) { chosen = Sa; color = 'var(--color-co2-40)'; label = 'CO₂濃度40の曲線上'; }
-    else { chosen = Sb; color = 'var(--color-co2-60)'; label = 'CO₂濃度60の曲線上'; }
-    const mx = xPos(xVal), my = yPos(chosen);
+    var loc = pt.matrixTransform(studentGraph.getScreenCTM().inverse());
+    var xClamp = Math.max(40, Math.min(300, loc.x));
+    var yClamp = Math.max(20, Math.min(180, loc.y));
+    var xVal = (xClamp - 40) / 260 * 100;
+    var clickS = (180 - yClamp) / 160 * 100;
+    var Sa = interp(Ay, xVal);
+    var Sb = interp(By, xVal);
+    var chosen, color, label;
+
+    if (Math.abs(clickS - Sa) <= Math.abs(clickS - Sb)) {
+      chosen = Sa; color = '#10b981'; label = 'CO₂ 40 曲線';
+    } else {
+      chosen = Sb; color = '#f97316'; label = 'CO₂ 60 曲線';
+    }
+
+    var mx = xPos(xVal), my = yPos(chosen);
     document.getElementById('pick-marker').setAttribute('cx', mx);
     document.getElementById('pick-marker').setAttribute('cy', my);
     document.getElementById('pick-marker').setAttribute('fill', color);
     document.getElementById('pick-marker').setAttribute('opacity', 1);
+
     document.getElementById('pick-x').setAttribute('x1', mx);
     document.getElementById('pick-x').setAttribute('x2', mx);
     document.getElementById('pick-x').setAttribute('y1', my);
     document.getElementById('pick-x').setAttribute('y2', 180);
     document.getElementById('pick-x').setAttribute('opacity', 1);
+
     document.getElementById('pick-y').setAttribute('x1', 40);
     document.getElementById('pick-y').setAttribute('x2', mx);
     document.getElementById('pick-y').setAttribute('y1', my);
     document.getElementById('pick-y').setAttribute('y2', my);
     document.getElementById('pick-y').setAttribute('opacity', 1);
-    const integerPercent = Math.round(chosen);
-    document.getElementById('pick-readout').innerHTML = '酸素濃度 <span style="font-weight:700;">' + Math.round(xVal) + '</span> → 酸素ヘモグロビンの割合 <span style="font-weight:700; color:' + color + ';">' + integerPercent + '%</span> （' + label + '）';
+
+    var integerPercent = Math.round(chosen);
+    document.getElementById('pick-readout').innerHTML = '酸素濃度 <span class="font-black text-slate-800">' + Math.round(xVal) + '</span> → 割合 <span class="font-black" style="color:' + color + ';">' + integerPercent + '%</span> （' + label + '）';
     setClickTrucksPrecision(chosen, color);
   });
+}
 
-  const correctAnswer = { A: '肺胞', B: '組織' };
-  const hints = {
-    A: 'ヒント：点Aは二酸化炭素を外へ出し切ってCO₂濃度が低く（40）、酸素濃度が高い環境だよ。トラックが「酸素をたくさん積み込む」場所はどちらかな？',
-    B: 'ヒント：点Bは細胞が活動してCO₂（代謝のゴミ）がたくさん発生している（60）環境だよ。トラックが「酸素を降ろして届ける」必要がある場所はどちらかな？'
-  };
-  document.querySelectorAll('.quiz-btn').forEach(function(qbtn) {
-    qbtn.addEventListener('click', function() {
-      const point = qbtn.getAttribute('data-point');
-      const choice = qbtn.getAttribute('data-choice');
-      const fb = document.getElementById('feedback-' + point);
-      if (choice === correctAnswer[point]) {
-        fb.textContent = '正解です！（' + choice + '）';
-        fb.style.color = '#059669'; fb.style.fontWeight = '700';
-        document.getElementById('label-' + point).textContent = choice;
-        document.querySelectorAll('[data-point="' + point + '"]').forEach(function(b) { b.disabled = true; });
-      } else {
-        fb.textContent = hints[point];
-        fb.style.color = '#d97706'; fb.style.fontWeight = '500';
-      }
-    });
+// --- 生徒用クイズ ---
+var correctAnswer = { A: '肺胞', B: '組織' };
+var hints = {
+  A: 'ヒント：二酸化炭素を出してCO₂濃度が低く（40）、酸素濃度が高い環境だよ。トラックが「酸素を多く積み込む」場所はどちらかな？',
+  B: 'ヒント：細胞が代謝でCO₂を多く発生させている（60）環境だよ。トラックが「酸素を放出して届ける」場所はどちらかな？'
+};
+
+document.querySelectorAll('.quiz-btn').forEach(function(qbtn) {
+  qbtn.addEventListener('click', function() {
+    var point = qbtn.getAttribute('data-point');
+    var choice = qbtn.getAttribute('data-choice');
+    var fb = document.getElementById('feedback-' + point);
+    if (choice === correctAnswer[point]) {
+      fb.textContent = '正解です！（' + choice + '）';
+      fb.className = 'text-xs pl-5 font-bold text-emerald-600';
+      document.getElementById('label-' + point).textContent = choice;
+      document.querySelectorAll('[data-point="' + point + '"]').forEach(function(b) { b.disabled = true; b.className += ' opacity-50 cursor-not-allowed'; });
+    } else {
+      fb.textContent = hints[point];
+      fb.className = 'text-xs pl-5 font-medium text-amber-600';
+    }
   });
-  document.getElementById('quiz-reset-btn').addEventListener('click', function() {
+});
+
+var quizResetBtn = document.getElementById('quiz-reset-btn');
+if (quizResetBtn) {
+  quizResetBtn.addEventListener('click', function() {
     document.getElementById('label-A').textContent = '点A';
     document.getElementById('label-B').textContent = '点B';
     document.getElementById('feedback-A').textContent = '';
     document.getElementById('feedback-B').textContent = '';
-    document.querySelectorAll('.quiz-btn').forEach(function(b) { b.disabled = false; });
+    document.querySelectorAll('.quiz-btn').forEach(function(b) { 
+      b.disabled = false; 
+      b.className = 'quiz-btn px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold hover:bg-slate-50 active:scale-95 transition-all';
+    });
   });
+}
 
-  const bubbleContainer2 = document.getElementById('bubbles');
-  const bubbles2 = [];
-  for (let i = 0; i < 10; i++) {
-    const b = document.createElement('div');
-    b.style.width = '24px'; b.style.height = '24px'; b.style.borderRadius = '6px';
-    b.style.border = '1.5px solid #d1d5db'; b.style.boxSizing = 'border-box';
-    b.style.display = 'flex'; b.style.alignItems = 'center'; b.style.justifyContent = 'center';
-    b.style.fontSize = '9px'; b.style.fontWeight = '700'; b.style.transition = 'border-color 0.1s linear';
-    bubbleContainer2.appendChild(b); bubbles2.push(b);
+// --- 生徒用トラックシミュレーション ---
+var bubbleContainer = document.getElementById('bubbles');
+var bubbles = [];
+if (bubbleContainer) {
+  for (var i = 0; i < 10; i++) {
+    var b = document.createElement('div');
+    b.className = 'w-6 h-6 rounded-md border border-slate-300 text-[9px] font-black flex items-center justify-center transition-colors duration-100';
+    bubbleContainer.appendChild(b);
+    bubbles.push(b);
   }
-  function setBubblesLinear2(pct, color) {
-    for (let i = 0; i < 10; i++) {
-      const minVal = i * 10, maxVal = (i + 1) * 10;
-      let fill = 0;
-      if (pct >= maxVal) fill = 100; else if (pct <= minVal) fill = 0; else fill = ((pct - minVal) / 10) * 100;
-      if (fill > 0) {
-        bubbles2[i].style.background = 'linear-gradient(to right, ' + color + ' ' + fill + '%, transparent ' + fill + '%)';
-        bubbles2[i].style.borderColor = color;
-        bubbles2[i].style.color = fill >= 50 ? '#ffffff' : color;
-        bubbles2[i].textContent = 'O₂';
-      } else {
-        bubbles2[i].style.background = 'transparent'; bubbles2[i].style.borderColor = '#d1d5db';
-        bubbles2[i].style.color = 'transparent'; bubbles2[i].textContent = '';
-      }
-    }
-  }
-  setBubblesLinear2(97, 'var(--color-co2-40)');
-  function lerpColorWithYellow2(ratio) {
-    let r, g, b;
-    if (ratio <= 0.5) {
-      const t = ratio * 2;
-      r = Math.round(16 + t * (234 - 16)); g = Math.round(185 + t * (179 - 185)); b = Math.round(129 + t * (8 - 129));
+}
+
+function setBubblesLinear(pct, color) {
+  for (var i = 0; i < 10; i++) {
+    if (!bubbles[i]) continue;
+    var fill = Math.max(0, Math.min(100, (pct - i * 10) * 10));
+    if (fill > 0) {
+      bubbles[i].style.background = 'linear-gradient(to right, ' + color + ' ' + fill + '%, transparent ' + fill + '%)';
+      bubbles[i].style.borderColor = color;
+      bubbles[i].style.color = fill >= 50 ? '#ffffff' : color;
+      bubbles[i].textContent = 'O₂';
     } else {
-      const t = (ratio - 0.5) * 2;
-      r = Math.round(234 + t * (249 - 234)); g = Math.round(179 + t * (115 - 179)); b = Math.round(8 + t * (22 - 8));
+      bubbles[i].style.background = 'transparent';
+      bubbles[i].style.borderColor = '#cbd5e1';
+      bubbles[i].style.color = 'transparent';
+      bubbles[i].textContent = '';
     }
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
   }
-  let atLung2 = true, animating2 = false;
-  const particleContainer2 = document.getElementById('particle-container');
-  const cargoGroup2 = document.getElementById('cargo-o2-group');
-  function setCargoO2Level2(pct) { cargoGroup2.style.opacity = Math.max(0.1, pct / 100); }
-  function spawnParticle2(type) {
-    const p = document.createElement('div');
-    p.className = 'particle-bubble ' + (type === 'load' ? 'particle-load' : 'particle-unload');
-    p.textContent = 'O₂';
-    const truckElem = document.getElementById('truck');
-    const leftPos = truckElem.offsetLeft;
-    if (type === 'load') { p.style.left = (leftPos + 6) + 'px'; p.style.top = '10px'; }
-    else { p.style.left = (leftPos + 18) + 'px'; p.style.top = '14px'; }
-    particleContainer2.appendChild(p);
-    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 800);
+}
+setBubblesLinear(97, '#10b981');
+
+var atLung = true;
+var animating = false;
+var particleContainer = document.getElementById('particle-container');
+var cargoGroup = document.getElementById('cargo-o2-group');
+
+function spawnParticle(type) {
+  if (!particleContainer) return;
+  var p = document.createElement('div');
+  p.className = 'particle-bubble ' + (type === 'load' ? 'particle-load' : 'particle-unload');
+  p.textContent = 'O₂';
+  var truckElem = document.getElementById('truck');
+  var leftPos = truckElem ? truckElem.offsetLeft : 0;
+  p.style.left = (leftPos + (type === 'load' ? 6 : 18)) + 'px';
+  p.style.top = type === 'load' ? '6px' : '10px';
+  particleContainer.appendChild(p);
+  setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 750);
+}
+
+function setBloodFlowActive(active, isToLung) {
+  var pArt = document.getElementById('flow-p-art');
+  var pVein = document.getElementById('flow-p-vein');
+  var aorta = document.getElementById('flow-aorta');
+  var vena = document.getElementById('flow-vena');
+
+  if (!pArt || !pVein || !aorta || !vena) return;
+
+  if (active) {
+    if (!isToLung) {
+      aorta.classList.remove('blood-flow-stopped');
+      pVein.classList.remove('blood-flow-stopped');
+    } else {
+      vena.classList.remove('blood-flow-stopped');
+      pArt.classList.remove('blood-flow-stopped');
+    }
+  } else {
+    pArt.classList.add('blood-flow-stopped');
+    pVein.classList.add('blood-flow-stopped');
+    aorta.classList.add('blood-flow-stopped');
+    vena.classList.add('blood-flow-stopped');
   }
-  const goBtn2 = document.getElementById('go-btn');
-  const truck2 = document.getElementById('truck');
-  const truckSvg2 = document.getElementById('truck-icon-svg');
-  const truckBody2 = document.getElementById('truck-body');
-  const statusEl2 = document.getElementById('status-el');
-  goBtn2.addEventListener('click', function() {
-    if (animating2) return;
-    animating2 = true; goBtn2.disabled = true; truck2.classList.add('moving');
-    const toLung = !atLung2;
-    truckSvg2.style.transform = toLung ? 'scaleX(-1)' : 'scaleX(1)';
-    truck2.style.left = toLung ? '0%' : 'calc(100% - 52px)';
-    statusEl2.textContent = toLung ? '肺胞へ向かって移動中…' : '組織へ向かって移動中…';
+}
+
+var goBtn = document.getElementById('go-btn');
+var truck = document.getElementById('truck');
+var truckSvg = document.getElementById('truck-icon-svg');
+var truckBody = document.getElementById('truck-body');
+var statusEl = document.getElementById('status-el');
+
+if (goBtn) {
+  goBtn.addEventListener('click', function() {
+    if (animating) return;
+    animating = true;
+    goBtn.disabled = true;
+    truck.classList.add('truck-moving');
+    
+    var toLung = !atLung;
+    setBloodFlowActive(true, toLung);
+
+    truckSvg.style.transform = toLung ? 'scaleX(-1)' : 'scaleX(1)';
+    truck.style.left = toLung ? '0%' : 'calc(100% - 48px)';
+    statusEl.textContent = toLung ? '心臓のポンプで肺胞へ血液が戻っています…' : '心臓のポンプで全身の組織へ血液が向かっています…';
+
     setTimeout(function() {
-      truck2.classList.remove('moving');
-      const startPct = toLung ? 40 : 97;
-      const endPct = toLung ? 97 : 40;
-      const duration = 1500;
-      let start = null, lastP = 0;
-      statusEl2.textContent = toLung ? '肺胞に到着！ 酸素を積み込み中（Hb + O₂ → HbO₂）' : '組織に到着！ 酸素を放出中（HbO₂ → Hb + O₂）';
-      function step(ts) {
-        if (!start) start = ts;
-        const elapsed = ts - start;
-        const progress = Math.min(elapsed / duration, 1);
-        if (progress < 0.95 && elapsed - lastP > 180) { spawnParticle2(toLung ? 'load' : 'unload'); lastP = elapsed; }
-        const currentPct = startPct + (endPct - startPct) * progress;
-        const currentColor = lerpColorWithYellow2(1 - currentPct / 100);
-        setBubblesLinear2(currentPct, currentColor);
-        setCargoO2Level2(currentPct);
-        truckBody2.setAttribute('fill', currentColor);
-        if (progress < 1) requestAnimationFrame(step);
-        else {
-          atLung2 = toLung; animating2 = false; goBtn2.disabled = false;
-          if (atLung2) {
-            statusEl2.textContent = '肺胞で酸素の積み込み完了！（割合: 97%）';
-            goBtn2.innerHTML = '<span>組織へ出発</span><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+      truck.classList.remove('truck-moving');
+      setBloodFlowActive(false, toLung);
+      
+      var startPct = toLung ? 40 : 97;
+      var endPct = toLung ? 97 : 40;
+      var transferDuration = 1500;
+      var transferStart = null;
+      var lastParticleTime = 0;
+
+      statusEl.textContent = toLung ? '肺胞に到着！ 酸素を積み込み中（Hb + O₂ → HbO₂）' : '組織に到着！ 酸素を放出中（HbO₂ → Hb + O₂）';
+
+      function transferStep(timestamp) {
+        if (!transferStart) transferStart = timestamp;
+        var elapsed = timestamp - transferStart;
+        var progress = Math.min(elapsed / transferDuration, 1);
+
+        if (progress < 0.95 && elapsed - lastParticleTime > 180) {
+          spawnParticle(toLung ? 'load' : 'unload');
+          lastParticleTime = elapsed;
+        }
+
+        var currentPct = startPct + (endPct - startPct) * progress;
+        var currentColor = currentPct > 68 ? '#10b981' : (currentPct > 50 ? '#eab308' : '#f97316');
+
+        setBubblesLinear(currentPct, currentColor);
+        if (cargoGroup) cargoGroup.style.opacity = Math.max(0.1, currentPct / 100);
+        if (truckBody) truckBody.setAttribute('fill', currentColor);
+
+        if (progress < 1) {
+          requestAnimationFrame(transferStep);
+        } else {
+          atLung = toLung;
+          animating = false;
+          goBtn.disabled = false;
+          
+          if (atLung) {
+            statusEl.textContent = '肺胞で酸素の積み込み完了！（割合: 97%）';
+            goBtn.innerHTML = '<span>組織へ出発</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
           } else {
-            statusEl2.textContent = '組織で酸素を放出し終わりました！（割合: 40%）';
-            goBtn2.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg><span>肺胞へ戻る</span>';
+            statusEl.textContent = '組織で酸素を放出し終わりました！（割合: 40%）';
+            goBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg><span>肺胞へ戻る</span>';
           }
         }
       }
-      requestAnimationFrame(step);
-    }, 1500);
+
+      requestAnimationFrame(transferStep);
+    }, 1600);
   });
-})();
+}
 </script>
 </body>
 </html>
