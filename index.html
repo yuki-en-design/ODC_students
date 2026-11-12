@@ -128,6 +128,19 @@ details.ex p{font-size:19px;line-height:1.8;margin:10px 0 0;}
     </div>
     <div>
       <div class="box">
+        <h3>このグラフの読み方</h3>
+        <p>言葉の意味が分からなくなったら開こう。</p>
+        <div class="row"><button class="btn" id="h0b">読み方を見る</button></div>
+        <div class="hint" id="h0">
+          <b>肺胞</b>：肺の奥の小さな袋。吸った空気が入る。トラックが酸素を積む場所<br>
+          <b>組織</b>：筋肉や脳など、細胞が集まっているところ。トラックが酸素を届ける場所<br>
+          <b>ヘモグロビン</b>：赤血球の中にある、酸素を運ぶトラック<br>
+          <b>酸素ヘモグロビン</b>：酸素を積んでいるトラック<br>
+          <b>縦軸</b>：トラック100台のうち、酸素を積んでいる台数（％）<br>
+          <b>曲線が2本</b>：同じトラックでも、二酸化炭素が多い場所（組織）では酸素を降ろしやすくなる。だから場所ごとに1本ずつある
+        </div>
+      </div>
+      <div class="box">
         <h3>問１　肺胞と組織の血液で、酸素ヘモグロビンの割合はそれぞれ何％？</h3>
         <p>解こうとすると、困ることがある。グラフの曲線Ａ・Ｂには、どちらが肺胞でどちらが組織か書いていない。まず見分けよう。</p>
       </div>
@@ -290,6 +303,7 @@ details.ex p{font-size:19px;line-height:1.8;margin:10px 0 0;}
     document.getElementById('r1').innerHTML = (useA ? '曲線Ａ' : '曲線Ｂ') + '：酸素濃度 <b>' + x + '</b> → 割合 <b>' + Math.round(v) + '％</b>';
   });
   document.getElementById('h1b').addEventListener('click', function(){ document.getElementById('h1').classList.add('on'); });
+  document.getElementById('h0b').addEventListener('click', function(){ document.getElementById('h0').classList.toggle('on'); });
 
   /* ---- 2：トラック ---- */
   var TRUCK = '<rect x="1" y="2.5" width="16" height="11.5" rx="1.5" stroke-width="1.6"/><path d="M17 6.5h5.2l4.3 4.3V14H17z" stroke-width="1.6"/><circle cx="6" cy="16.5" r="2.3"/><circle cx="21.5" cy="16.5" r="2.3"/><circle cx="9" cy="8" r="2.4" class="o2"/>';
