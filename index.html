@@ -275,6 +275,7 @@ details.ex p{font-size:19px;line-height:1.8;margin:10px 0 0;}
       el(svg, 'text', {x: px(v), y: Y0 + 17, 'text-anchor': 'middle', 'font-size': 13, fill: '#15233b'}, v);
       el(svg, 'text', {x: X0 - 6, y: py(v) + 4, 'text-anchor': 'end', 'font-size': 13, fill: '#15233b'}, v);
     });
+    el(svg, 'text', {x: px(30), y: Y0 + 17, 'text-anchor': 'middle', 'font-size': 13, fill: '#15233b'}, 30);
     el(svg, 'text', {x: (X0 + X1) / 2, y: Y0 + 36, 'text-anchor': 'middle', 'font-size': 14, fill: '#15233b'}, '酸素濃度（相対値）');
     var lab = el(svg, 'text', {'text-anchor': 'middle', 'font-size': 13, fill: '#15233b'});   // 縦軸の名前は縦書き（1文字ずつ積む）
     var chars = '酸素ヘモグロビンの割合'.split('').concat(['︵', '％', '︶']), st = 13.3, y0 = (Y0 + Y1) / 2 - st * chars.length / 2 + 11;
