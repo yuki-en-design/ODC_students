@@ -101,6 +101,9 @@ table.t th{background:var(--wash);}
 @media (max-width:860px){#p3 .grid{grid-template-columns:1fr;}}
 .res.mid{display:block;background:var(--wash);color:var(--ink);}
 details.ex summary{font-size:19px;font-weight:700;cursor:pointer;margin-top:16px;}
+/* 問３：答えを送るボタン（Apps Script の画面を別タブで開く） */
+a.btn{display:inline-block;text-decoration:none;}
+.send3-note{font-size:16px;color:var(--muted);}
 details.ex p{font-size:19px;line-height:1.8;margin:10px 0 0;}
 </style>
 </head>
@@ -189,7 +192,7 @@ details.ex p{font-size:19px;line-height:1.8;margin:10px 0 0;}
 <!-- ===== 3 なぜ全部渡さない？ ===== -->
 <section class="page" id="p3">
   <h2>この条件では、なぜ全部は渡さないのか？</h2>
-  <p class="lead">全部は渡さずに残る分があることには、どんな意味があるのだろう。ワークシートの３に、下の形で書こう。２で出した数字を使うこと。</p>
+  <p class="lead">全部は渡さずに残る分があることには、どんな意味があるのだろう。ワークシートの３に、下の形で書こう。２で出した数字を使うこと。書けたら「答えを送る」から送ろう。</p>
   <div class="grid">
     <div class="box">
       <div class="tmpl">
@@ -198,6 +201,7 @@ details.ex p{font-size:19px;line-height:1.8;margin:10px 0 0;}
         <div class="ind"><span class="no">（イ）</span><span class="ul" style="width:14em"></span>。</div>
         <div>残りの<span class="no">（ウ）</span><span class="ul" style="width:2.5em"></span>％は、そういうときの<span class="no">（エ）</span><span class="ul" style="width:6em"></span>になっている。</div>
       </div>
+      <div class="row"><a class="btn main send3" href="https://script.google.com/a/macros/konan-h.ed.jp/s/AKfycbzUlmMzV4X3wZ_ManQOVQM-eRAdwAKEsSxI-Agr-THRuYXquHy1NhqLXd22yVKjGBI98A/exec" target="_blank" rel="noopener">答えを送る →</a><span class="send3-note">別のタブで開きます。名前は出ません。</span></div>
     </div>
     <div class="box step-hints">
       <h3>詰まった空欄のヒントだけ開こう</h3>
